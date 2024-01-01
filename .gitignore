@@ -1,0 +1,42 @@
+# Binaries and object files
+/bin/
+/obj/
+*.o
+*.so
+
+# Output of the go coverage tool
+*.cover
+
+# Dependency directories (remove these lines if you prefer to include them)
+/vendor/
+/Godeps/
+
+# IDE and editor folders
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS-generated files (macOS, Windows, Linux)
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.db
+
+# Build results
+/dist/
+/build/
+
+# Dependency files
+go.sum
+go.mod
+
+# Local environment files
+.env
+.env.local
+
+# Test binary, built with go test -c
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
