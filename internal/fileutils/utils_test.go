@@ -70,3 +70,27 @@ func TestAddGetDestination(t *testing.T) {
 		t.Errorf("Expected 2 files, got %d", len(result))
 	}
 }
+func TestFilterStartedWith(t *testing.T) {
+	files := []os.FileInfo{
+		mockFileInfo{name: "prefix1_sample.txt"},
+		mockFileInfo{name: "prefix2_sample.txt"},
+		mockFileInfo{name: "other_file.txt"},
+	}
+	prefixes := []string{"prefix1", "prefix2"}
+
+	filteredFiles := FilterStartedWith(files, prefixes)
+
+	if len(filteredFiles) != 2 {
+		t.Errorf("Expected 2 files to match prefixes, got %d", len(filteredFiles))
+	}
+
+	expectedNames := map[string]bool{"prefix1_sample.txt": true, "prefix2_sample.txt": true}
+	for _, file := range filteredFiles {
+		if _, ok := expectedNames[file.Name()]; !ok {
+			t.Errorf("Unexpected file: %s", file.Name())
+		}
+	}
+	for _, file := range filteredFiles {
+		t.Logf("File: %s", file.Name())
+	}
+}

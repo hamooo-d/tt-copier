@@ -46,19 +46,6 @@ func (c *Client) ListFiles(dir string) ([]os.FileInfo, error) {
 	return c.sftpClient.ReadDir(dir)
 }
 
-func (c *Client) FilterStartedWith(files []os.FileInfo, prefixes []string) []os.FileInfo {
-	var filteredFiles []os.FileInfo
-
-	for _, file := range files {
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(file.Name(), prefix) {
-				filteredFiles = append(filteredFiles, file)
-			}
-		}
-	}
-	return filteredFiles
-}
-
 func (c *Client) CopyRename(files []os.FileInfo, source, destination string, renameRules map[string]string) error {
 	for _, file := range files {
 		newFilename := file.Name()
@@ -89,4 +76,38 @@ func (c *Client) CopyRename(files []os.FileInfo, source, destination string, ren
 		}
 	}
 	return nil
+}
+
+func (c *Client) PutProcedure(localPath, remotePath string) error {
+	localFile, err := os.Open(localPath)
+	if err != nil {
+		return err
+	}
+	defer localFile.Close()
+
+	remoteFile, err := c.sftpClient.Create(remotePath)
+	if err != nil {
+		return err
+	}
+	defer remoteFile.Close()
+
+	_, err = io.Copy(remoteFile, localFile)
+	return err
+}
+
+func (c *Client) GetProcedure(remotePath, localPath string) error {
+	remoteFile, err := c.sftpClient.Open(remotePath)
+	if err != nil {
+		return err
+	}
+	defer remoteFile.Close()
+
+	localFile, err := os.Create(localPath)
+	if err != nil {
+		return err
+	}
+	defer localFile.Close()
+
+	_, err = io.Copy(localFile, remoteFile)
+	return err
 }
