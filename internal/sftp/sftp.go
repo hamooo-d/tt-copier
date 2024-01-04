@@ -92,11 +92,23 @@ func (c *Client) PutProcedure(localPath, remotePath string) error {
 	defer remoteFile.Close()
 
 	_, err = io.Copy(remoteFile, localFile)
+
+	if err != nil {
+		return fmt.Errorf("failed to copy local file to remote: %v", err)
+	}
+
+	err = c.sftpClient.Chmod(remotePath, 0755)
+
+	if err != nil {
+		return fmt.Errorf("failed to change remote file permission: %v", err)
+	}
+
 	return err
 }
 
 func (c *Client) GetProcedure(remotePath, localPath string) error {
 	remoteFile, err := c.sftpClient.Open(remotePath)
+
 	if err != nil {
 		return err
 	}

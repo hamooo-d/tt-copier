@@ -23,20 +23,22 @@ func (m mockFileInfo) IsDir() bool        { return m.isDir }
 func (m mockFileInfo) Sys() interface{}   { return nil }
 
 func TestAddBankDestination(t *testing.T) {
-	files := []os.FileInfo{
-		mockFileInfo{name: "000003_sample.txt"},
-		mockFileInfo{name: "000004_sample.txt"},
-		mockFileInfo{name: "non_bank_file.txt"},
+	files := []LocalFileInfo{
+		{FileInfo: mockFileInfo{name: "000006_EV_MERC_20240102.txt"}, Path: "", SourceFullPath: ""},
+		{FileInfo: mockFileInfo{name: "000004_sample.txt"}, Path: "", SourceFullPath: ""},
+		{FileInfo: mockFileInfo{name: "non_bank_file.txt"}, Path: "", SourceFullPath: ""},
 	}
 	basePath := "/home/sftp/files/TTP"
 
 	result, err := AddBankDestination(files, basePath)
+
 	if err != nil {
 		t.Fatalf("AddBankDestination returned an error: %v", err)
 	}
 
 	if len(result) != 2 {
 		t.Errorf("Expected 2 files to match bank IDs, got %d", len(result))
+
 		for _, f := range result {
 			t.Logf("File: %s, Destination: %s", f.Name(), f.DestinationFullPath)
 		}
@@ -55,13 +57,14 @@ func TestAddBankDestination(t *testing.T) {
 }
 
 func TestAddGetDestination(t *testing.T) {
-	files := []os.FileInfo{
-		mockFileInfo{name: "sample1.txt"},
-		mockFileInfo{name: "sample2.txt"},
+	files := []LocalFileInfo{
+		{FileInfo: mockFileInfo{name: "prefix1_sample.txt"}, Path: "", SourceFullPath: ""},
+		{FileInfo: mockFileInfo{name: "prefix2_sample.txt"}, Path: "", SourceFullPath: ""},
 	}
 	destination := "/online/mxpprod/selectsystem_files/cardholder/in"
 
 	result, err := AddGetDestination(files, destination)
+
 	if err != nil {
 		t.Errorf("AddGetDestination returned an error: %v", err)
 	}
@@ -70,11 +73,12 @@ func TestAddGetDestination(t *testing.T) {
 		t.Errorf("Expected 2 files, got %d", len(result))
 	}
 }
+
 func TestFilterStartedWith(t *testing.T) {
-	files := []os.FileInfo{
-		mockFileInfo{name: "prefix1_sample.txt"},
-		mockFileInfo{name: "prefix2_sample.txt"},
-		mockFileInfo{name: "other_file.txt"},
+	files := []LocalFileInfo{
+		{FileInfo: mockFileInfo{name: "prefix1_sample.txt"}, Path: "", SourceFullPath: ""},
+		{FileInfo: mockFileInfo{name: "prefix2_sample.txt"}, Path: "", SourceFullPath: ""},
+		{FileInfo: mockFileInfo{name: "non_bank_file.txt"}, Path: "", SourceFullPath: ""},
 	}
 	prefixes := []string{"prefix1", "prefix2"}
 

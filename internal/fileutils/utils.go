@@ -1,6 +1,7 @@
 package fileutils
 
 import (
+	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -21,11 +22,11 @@ type LocalFileInfo struct {
 
 func AddBankDestination(source []LocalFileInfo, basePath string) ([]FileInfoExtended, error) {
 	banksNames := map[string]string{
-		"000003": "SB",
+		"000001": "TT",
 		"000002": "ATIB",
+		"000003": "SB",
 		"000004": "NAB",
 		"000005": "MED",
-		"000001": "TT",
 		"000006": "NCB",
 	}
 
@@ -33,14 +34,15 @@ func AddBankDestination(source []LocalFileInfo, basePath string) ([]FileInfoExte
 
 	for _, file := range source {
 		for id, name := range banksNames {
-			if strings.Contains(file.Name(), id) { // Check if the filename contains the bank ID
+			if strings.Contains(file.Name(), id) {
 				destination := filepath.Join(basePath, name, "Prod", "from_tadawul")
 				newFileList = append(newFileList, FileInfoExtended{
 					FileInfo:            file,
 					DestinationPath:     destination,
 					DestinationFullPath: filepath.Join(destination, file.Name()),
+					SourceFullPath:      file.SourceFullPath,
 				})
-				break // Assuming only one bank ID matches per file
+				break
 			}
 		}
 	}
@@ -56,6 +58,7 @@ func AddGetDestination(fileList []LocalFileInfo, destination string) ([]FileInfo
 			FileInfo:            file,
 			DestinationPath:     destination,
 			DestinationFullPath: filepath.Join(destination, file.Name()),
+			SourceFullPath:      file.SourceFullPath,
 		})
 	}
 
@@ -64,11 +67,20 @@ func AddGetDestination(fileList []LocalFileInfo, destination string) ([]FileInfo
 
 func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo {
 	var filteredFiles []LocalFileInfo
-
 	for _, file := range files {
+		parts := strings.SplitN(file.Name(), "_", 3)
+
+		if len(parts) < 2 {
+			continue
+		}
+
+		prefixPart := parts[1]
+
 		for _, prefix := range prefixes {
-			if strings.HasPrefix(file.Name(), prefix) {
+			if strings.HasPrefix(prefixPart, prefix) {
 				filteredFiles = append(filteredFiles, file)
+				log.Printf("File %s matched prefix %s", file.Name(), prefix)
+				break
 			}
 		}
 	}
@@ -76,7 +88,7 @@ func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo
 }
 
 func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
-	ttDestination := "/home/sftp/files/TTP/TT/Prod/from_tadawul"
+	ttDestination := "/home/sftp/files/TTP/"
 
 	return AddGetDestination(source, ttDestination)
 }
@@ -84,20 +96,24 @@ func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
 func LoadAllLocalFiles(paths []string) ([]LocalFileInfo, error) {
 	var files []LocalFileInfo
 	for _, path := range paths {
-		entries, err := os.ReadDir(path)
+		dirFiles, err := os.ReadDir(path)
 		if err != nil {
 			return nil, err
 		}
-		for _, entry := range entries {
-			if !entry.IsDir() {
-				fileInfo, err := entry.Info()
+
+		for _, file := range dirFiles {
+			if !file.IsDir() {
+				fullPath := filepath.Join(path, file.Name())
+				fileInfo, err := file.Info()
+
 				if err != nil {
 					return nil, err
 				}
+
 				files = append(files, LocalFileInfo{
 					FileInfo:       fileInfo,
 					Path:           path,
-					SourceFullPath: filepath.Join(path, fileInfo.Name()),
+					SourceFullPath: fullPath,
 				})
 			}
 		}
