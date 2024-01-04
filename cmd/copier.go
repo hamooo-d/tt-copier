@@ -4,14 +4,15 @@ import (
 	"fmt"
 	"os"
 
+	"tt-copier/config"
 	"tt-copier/internal/db"
 	"tt-copier/internal/fileutils"
 	"tt-copier/internal/logger"
 	"tt-copier/internal/sftp"
 )
 
-func uploadToSFTP(client *sftp.Client) bool {
-	dbInstance, err := db.NewDBInstance("./db.sqlite")
+func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
+	dbInstance, err := db.NewDBInstance(cfg.Database.DBPath)
 
 	if err != nil {
 		logger.Error("Error creating DB instance: %v", err)
@@ -21,19 +22,10 @@ func uploadToSFTP(client *sftp.Client) bool {
 
 	logger.Info("DB instance created successfully.", "INIT", "SUCCESS")
 
-	sourceList := []string{
-		"/online/mxpprod/selectsystem_files/cardholder/out",
-		"/online/mxpprod/selectsystem_files/transaction/out",
-		"/online/mxpprod/selectsystem_files/merchant/out",
-		"/online/mxpprod/selectsystem_files/evoucher/out",
-		"/online/mxpprod/selectsystem_files/merchant/out",
-	}
+	sourceList := cfg.SourceList
 
-	bankFilesPrefixes := []string{"CL.", "KYCFile_", "reload_",
-		"Rev_Reload_", "redemp_", "POS_RevAuthFile_", "APPLICATION.", "KYC_ATM_",
-		"SETT_TOPUP.", "CORP_TOPUP.", "EV_MERC"}
-
-	TTFilesPrefixes := []string{"PersoFile", "CL_TT", "FSO.", "PAYOUT."}
+	bankPrefixes := cfg.FilesPrefixes.BankFilesPrefixes
+	TTPrefixes := cfg.FilesPrefixes.TTFilesPrefixes
 
 	logger.Info("Loading all files from source list.", "LOAD", "START")
 
@@ -41,6 +33,7 @@ func uploadToSFTP(client *sftp.Client) bool {
 
 	if err != nil {
 		logger.Error("Error loading files from source list: %v", err)
+
 		return false
 	}
 
@@ -60,19 +53,20 @@ func uploadToSFTP(client *sftp.Client) bool {
 
 	logger.Info("Filtering bank and TT files.", "FILTER", "START")
 
-	bankFiles := fileutils.FilterStartedWith(filteredFiles, bankFilesPrefixes)
-	TTFiles := fileutils.FilterStartedWith(filteredFiles, TTFilesPrefixes)
+	bankFiles := fileutils.FilterStartedWith(filteredFiles, bankPrefixes)
+	TTFiles := fileutils.FilterStartedWith(filteredFiles, TTPrefixes)
 
 	logger.Info(fmt.Sprintf("Filtered, remaining %d bank files and %d TT files.", len(bankFiles), len(TTFiles)), "FILTER", "SUCCESS")
 
-	bankFilesWithDestination, err := fileutils.AddBankDestination(bankFiles, "/home/sftp/files/")
+	bankFilesWithDestination, err := fileutils.AddBankDestination(bankFiles, cfg.Dests.BankDest, cfg.BanksNames, cfg.Env)
 
 	if err != nil {
 		logger.Error("Error adding bank destination: %v", err)
+
 		return false
 	}
 
-	TTFilesWithDestination, err := fileutils.AddTTDestination(TTFiles) // Implement AddTTDestination
+	TTFilesWithDestination, err := fileutils.AddTTDestination(TTFiles)
 
 	if err != nil {
 		logger.Error("Error adding bank destination: %v", err)
@@ -118,7 +112,14 @@ func uploadToSFTP(client *sftp.Client) bool {
 
 func main() {
 	logger.Init()
-	client, err := sftp.NewClient("192.168.100.6", 22, "sofian", "sofian")
+	cfg, err := config.LoadConfig(".")
+
+	if err != nil {
+		logger.Error("Error loading config: %v", err)
+		os.Exit(1)
+	}
+
+	client, err := sftp.NewClient(cfg.SFTP.Host, cfg.SFTP.Port, cfg.SFTP.User, cfg.SFTP.Password)
 
 	if err != nil {
 		logger.Info("Error creating SFTP client, exiting.", "UPLOAD", "FAILED")
@@ -127,7 +128,7 @@ func main() {
 
 	defer client.Close()
 
-	success := uploadToSFTP(client)
+	success := uploadToSFTP(client, cfg)
 
 	if !success {
 		logger.Info("Upload failed, exiting.", "UPLOAD", "FAILED")
@@ -135,4 +136,5 @@ func main() {
 	} else {
 		logger.Info("Upload finished successfully.", "UPLOAD", "SUCCESS")
 	}
+
 }

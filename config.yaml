@@ -1,0 +1,56 @@
+# SFTP Connection creds
+sftp:
+  user: "sofian"
+  password: "sofian"
+  host: 192.168.100.6
+  port: 22
+
+# SQlite db path
+database:
+  db_path: "./db.sqlite"
+
+# Bank idx and bank dir name
+banksNames:
+  "000001": "TT"
+  "000002": "ATIB"
+  "000003": "SB"
+  "000004": "NAB"
+  "000005": "MED"
+  "000006": "NCB"
+
+# SFTP Path
+dests:
+  bank_dest: "/home/sftp/files/"
+
+# Enviroment Prod | UAT, Note: also used in sftp dest path
+env: "Prod"
+
+logs_path: "/var/log/tt_copier.log"
+
+# Files source list
+source_list:
+  - "/online/mxpprod/selectsystem_files/cardholder/out"
+  - "/online/mxpprod/selectsystem_files/transaction/out"
+  - "/online/mxpprod/selectsystem_files/merchant/out"
+  - "/online/mxpprod/selectsystem_files/evoucher/out"
+  - "/online/mxpprod/selectsystem_files/merchant/out"
+
+# Files prefixes
+files_prefixes:
+  bankFilesPrefixes:
+    - "CL."
+    - "KYCFile_"
+    - "reload_"
+    - "Rev_Reload_"
+    - "redemp_"
+    - "POS_RevAuthFile_"
+    - "APPLICATION."
+    - "KYC_ATM_"
+    - "SETT_TOPUP."
+    - "CORP_TOPUP."
+    - "EV_MERC"
+  TTFilesPrefixes:
+    - "PersoFile"
+    - "CL_TT"
+    - "FSO."
+    - "PAYOUT."

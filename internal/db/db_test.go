@@ -45,6 +45,7 @@ func TestNewDBInstance(t *testing.T) {
 func TestLogEntry(t *testing.T) {
 	db := setupTestDB(t)
 	err := db.LogEntry("/source/path", "/dest/path", "testfile.txt", "COPY")
+
 	if err != nil {
 		t.Errorf("Failed to log entry: %v", err)
 	}

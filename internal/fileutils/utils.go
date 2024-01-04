@@ -20,22 +20,13 @@ type LocalFileInfo struct {
 	SourceFullPath string
 }
 
-func AddBankDestination(source []LocalFileInfo, basePath string) ([]FileInfoExtended, error) {
-	banksNames := map[string]string{
-		"000001": "TT",
-		"000002": "ATIB",
-		"000003": "SB",
-		"000004": "NAB",
-		"000005": "MED",
-		"000006": "NCB",
-	}
-
+func AddBankDestination(source []LocalFileInfo, basePath string, banksNames map[string]string, env string) ([]FileInfoExtended, error) {
 	var newFileList []FileInfoExtended
 
 	for _, file := range source {
 		for id, name := range banksNames {
 			if strings.Contains(file.Name(), id) {
-				destination := filepath.Join(basePath, name, "Prod", "from_tadawul")
+				destination := filepath.Join(basePath, name, env, "from_tadawul")
 				newFileList = append(newFileList, FileInfoExtended{
 					FileInfo:            file,
 					DestinationPath:     destination,
