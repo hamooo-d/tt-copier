@@ -22,9 +22,9 @@ func uploadToSFTP(client *sftp.Client) bool {
 	logger.Info("DB instance created successfully.", "INIT", "SUCCESS")
 
 	sourceList := []string{
-		"/online/mxpprod/selectsystem_files/cardholder/in",
+		"/online/mxpprod/selectsystem_files/cardholder/out",
 		"/online/mxpprod/selectsystem_files/transaction/out",
-		"/online/mxpprod/selectsystem_files/merchant/in",
+		"/online/mxpprod/selectsystem_files/merchant/out",
 		"/online/mxpprod/selectsystem_files/evoucher/out",
 		"/online/mxpprod/selectsystem_files/merchant/out",
 	}
