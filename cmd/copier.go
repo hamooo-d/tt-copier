@@ -29,7 +29,7 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 
 	logger.Info("Loading all files from source list.", "LOAD", "START")
 
-	allFiles, err := fileutils.LoadAllLocalFiles(sourceList)
+	allFiles, err := fileutils.LoadAllSourceFiles(client, sourceList)
 
 	if err != nil {
 		logger.Error("Error loading files from source list: %v", err)

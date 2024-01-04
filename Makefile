@@ -12,6 +12,10 @@ setup:
 redo:
 	@echo "Running redo script..."
 	@bash $(REDO_SCRIPT)
+	
+gen_mock:
+	@echo "Generating mocks..."
+	@./scripts/gen_mock_src_files.bash
 
 build:
 	@echo "Building Go file..."

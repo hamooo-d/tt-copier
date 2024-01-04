@@ -30,7 +30,16 @@ func TestAddBankDestination(t *testing.T) {
 	}
 	basePath := "/home/sftp/files/TTP"
 
-	result, err := AddBankDestination(files, basePath)
+	banksNames := map[string]string{
+		"000001": "TT",
+		"000002": "ATIB",
+		"000003": "SB",
+		"000004": "NAB",
+		"000005": "MED",
+		"000006": "NCB",
+	}
+
+	result, err := AddBankDestination(files, basePath, banksNames, "UAT")
 
 	if err != nil {
 		t.Fatalf("AddBankDestination returned an error: %v", err)
@@ -53,7 +62,6 @@ func TestAddBankDestination(t *testing.T) {
 	for _, f := range result {
 		t.Logf("File: %s, Destination: %s", f.Name(), f.DestinationFullPath)
 	}
-
 }
 
 func TestAddGetDestination(t *testing.T) {

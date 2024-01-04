@@ -33,7 +33,6 @@ source_list:
   - "/online/mxpprod/selectsystem_files/transaction/out"
   - "/online/mxpprod/selectsystem_files/merchant/out"
   - "/online/mxpprod/selectsystem_files/evoucher/out"
-  - "/online/mxpprod/selectsystem_files/merchant/out"
 
 # Files prefixes
 files_prefixes:
@@ -49,6 +48,7 @@ files_prefixes:
     - "SETT_TOPUP."
     - "CORP_TOPUP."
     - "EV_MERC"
+
   TTFilesPrefixes:
     - "PersoFile"
     - "CL_TT"

@@ -105,21 +105,3 @@ func (c *Client) PutProcedure(localPath, remotePath string) error {
 
 	return err
 }
-
-func (c *Client) GetProcedure(remotePath, localPath string) error {
-	remoteFile, err := c.sftpClient.Open(remotePath)
-
-	if err != nil {
-		return err
-	}
-	defer remoteFile.Close()
-
-	localFile, err := os.Create(localPath)
-	if err != nil {
-		return err
-	}
-	defer localFile.Close()
-
-	_, err = io.Copy(localFile, remoteFile)
-	return err
-}

@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"tt-copier/internal/sftp"
 )
 
 type FileInfoExtended struct {
@@ -59,16 +60,8 @@ func AddGetDestination(fileList []LocalFileInfo, destination string) ([]FileInfo
 func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo {
 	var filteredFiles []LocalFileInfo
 	for _, file := range files {
-		parts := strings.SplitN(file.Name(), "_", 3)
-
-		if len(parts) < 2 {
-			continue
-		}
-
-		prefixPart := parts[1]
-
 		for _, prefix := range prefixes {
-			if strings.HasPrefix(prefixPart, prefix) {
+			if strings.HasPrefix(file.Name(), prefix) {
 				filteredFiles = append(filteredFiles, file)
 				log.Printf("File %s matched prefix %s", file.Name(), prefix)
 				break
@@ -84,10 +77,11 @@ func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
 	return AddGetDestination(source, ttDestination)
 }
 
-func LoadAllLocalFiles(paths []string) ([]LocalFileInfo, error) {
+func LoadAllSourceFiles(client *sftp.Client, paths []string) ([]LocalFileInfo, error) {
 	var files []LocalFileInfo
 	for _, path := range paths {
-		dirFiles, err := os.ReadDir(path)
+		dirFiles, err := client.ListFiles(path)
+
 		if err != nil {
 			return nil, err
 		}
@@ -95,14 +89,9 @@ func LoadAllLocalFiles(paths []string) ([]LocalFileInfo, error) {
 		for _, file := range dirFiles {
 			if !file.IsDir() {
 				fullPath := filepath.Join(path, file.Name())
-				fileInfo, err := file.Info()
-
-				if err != nil {
-					return nil, err
-				}
 
 				files = append(files, LocalFileInfo{
-					FileInfo:       fileInfo,
+					FileInfo:       file,
 					Path:           path,
 					SourceFullPath: fullPath,
 				})
