@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"tt-copier/internal/logger"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
