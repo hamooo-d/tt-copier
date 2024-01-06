@@ -1,6 +1,6 @@
 # SFTP Connection creds
 sftp:
-  user: "sofian"
+  user: "root"
   password: "sofian"
   host: 192.168.100.6
   port: 22

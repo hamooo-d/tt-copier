@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"tt-copier/internal/logger"
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
@@ -79,7 +80,8 @@ func (c *Client) CopyRename(files []os.FileInfo, source, destination string, ren
 }
 
 func (c *Client) PutProcedure(localPath, remotePath string) error {
-	localFile, err := os.Open(localPath)
+	localFile, err := c.sftpClient.Open(localPath)
+
 	if err != nil {
 		return err
 	}
@@ -94,14 +96,14 @@ func (c *Client) PutProcedure(localPath, remotePath string) error {
 	_, err = io.Copy(remoteFile, localFile)
 
 	if err != nil {
-		return fmt.Errorf("failed to copy local file to remote: %v", err)
+		return fmt.Errorf("failed to copy file over SFTP: %v", err)
 	}
 
-	err = c.sftpClient.Chmod(remotePath, 0755)
+	err = c.sftpClient.Chmod(remotePath, 0750)
 
 	if err != nil {
 		return fmt.Errorf("failed to change remote file permission: %v", err)
 	}
 
-	return err
+	return nil
 }

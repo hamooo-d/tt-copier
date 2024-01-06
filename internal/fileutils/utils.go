@@ -1,7 +1,6 @@
 package fileutils
 
 import (
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -63,7 +62,6 @@ func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo
 		for _, prefix := range prefixes {
 			if strings.HasPrefix(file.Name(), prefix) {
 				filteredFiles = append(filteredFiles, file)
-				log.Printf("File %s matched prefix %s", file.Name(), prefix)
 				break
 			}
 		}

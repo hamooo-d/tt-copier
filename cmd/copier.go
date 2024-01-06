@@ -73,26 +73,35 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 		return false
 	}
 
+	bankUploadCount := 0
+
 	for _, file := range bankFilesWithDestination {
 		sourcePath := file.SourceFullPath
 		destinationPath := file.DestinationFullPath
 
 		logger.Info(fmt.Sprintf("Uploading bank file %s", file.Name()), "UPLOAD", "START")
 
-		if _, err := os.Stat(sourcePath); os.IsNotExist(err) {
-			logger.Warn(fmt.Sprintf("File %s does not exist, skipping.", file.Name()), "UPLOAD", "SKIPPED")
-			continue
-		}
-
 		err := client.PutProcedure(sourcePath, destinationPath)
 
 		if err != nil {
 			logger.Warn(fmt.Sprintf("Error uploading bank file %s: %v", file.Name(), err), "UPLOAD", "FAILED")
 		} else {
+			err = dbInstance.LogEntry(sourcePath, destinationPath, file.Name())
+
+			if err != nil {
+				logger.Error("Error logging entry: %v", err)
+			} else {
+				logger.Info("File saved in db", "UPLOAD", "SUCCESS")
+
+			}
+			bankUploadCount++
 			logger.Info(fmt.Sprintf("Successfully uploaded bank file %s", file.Name()), "UPLOAD", "SUCCESS")
-			dbInstance.LogEntry(sourcePath, destinationPath, file.Name(), "UPLOAD")
 		}
 	}
+
+	// log total bank files and uploaded bank files
+	logger.Info(fmt.Sprintf("Total bank files: %d", len(bankFiles)), "UPLOAD", "SUCCESS")
+	logger.Info(fmt.Sprintf("Uploaded %d bank files, Total", bankUploadCount), "UPLOAD", "SUCCESS")
 
 	for _, file := range TTFilesWithDestination {
 		sourcePath := file.SourceFullPath
@@ -103,7 +112,6 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 			logger.Warn(fmt.Sprintf("Error uploading TT file %s: %v", file.Name(), err), "UPLOAD", "FAILED")
 		} else {
 			logger.Info(fmt.Sprintf("Successfully uploaded TT file %s", file.Name()), "UPLOAD", "SUCCESS")
-			dbInstance.LogEntry(sourcePath, destinationPath, file.Name(), "UPLOAD")
 		}
 	}
 
