@@ -16,42 +16,48 @@ This project is a Go-based application responsible for transferring files using 
 
 Ubuntu
 
-````bash
+```bash
     sudo apt install golang-go
-    ```
+```
 
 Arch
+
 ```bash
     sudo pacman -S go
-    ```
+```
 
 Red Hat, Fedora, CentOS
+
 ```bash
     sudo yum install go
-    ```
+```
 
 ### Project Setup
 
-- 1. Clone the project
+- Clone the project
+
 ```bash
     git clone github.com/hamooo-d/sftp-file-transfer
     cd sftp-file-transfer
-    ```
+```
 
-- 2. Enable CGO and install GCC
+- Enable CGO and install GCC
+
 ```bash
     export CGO_ENABLED=1
     sudo apt install build-essential # For Ubuntu/Debian
     sudo yum groupinstall "Development Tools" # For RedHat/CentOS
     sudo pacman -S base-devel # For Arch Linux
-    ```
+```
 
-- 3. Install dependencies
+- Install dependencies
+
 ```bash
     go mod tidy
-    ```
+```
 
 ### Folder Structure
+
 ```bash
         /
         ├── cmd
@@ -74,7 +80,7 @@ Red Hat, Fedora, CentOS
         ├── go.sum
         ├── logs.log
         └── Makefile
-````
+```
 
 The project is organized into several directories, each serving a specific purpose in the application's architecture:
 
@@ -111,34 +117,43 @@ The project is organized into several directories, each serving a specific purpo
 
 - To build the project
 
-````bash
+```bash
     make build
-    ```
+```
+
 - To build and run the project
+
 ```bash
     make run
-    ```
+```
+
 - To run sftp server mock structure
+
 ```bash
     make setup
-    ```
+```
+
 - To redo sftp server mock structure
+
 ```bash
     make redo
-    ```
+```
+
 - To generate mock files
+
 ```bash
     make gen_mock
-    ```
+```
 
 ## Configuration
 
 - Place the configuration file in the root directory of the project with the name `config.yaml`
+
 ```yaml
-    # config.yaml
-    db:
-        path: "db.sqlite"
-        table_name: "files"
-    log:
-        path: "logs.log"
-````
+# config.yaml
+db:
+  path: "db.sqlite"
+  table_name: "files"
+log:
+  path: "logs.log"
+```
