@@ -44,7 +44,7 @@ func TestNewDBInstance(t *testing.T) {
 
 func TestLogEntry(t *testing.T) {
 	db := setupTestDB(t)
-	err := db.LogEntry("/source/path", "/dest/path", "testfile.txt", "COPY")
+	err := db.LogEntry("/source/path", "/dest/path", "testfile.txt")
 
 	if err != nil {
 		t.Errorf("Failed to log entry: %v", err)
@@ -53,7 +53,7 @@ func TestLogEntry(t *testing.T) {
 
 func TestFileExists(t *testing.T) {
 	db := setupTestDB(t)
-	db.LogEntry("/source/path", "/dest/path", "existfile.txt", "COPY")
+	db.LogEntry("/source/path", "/dest/path", "existfile.txt")
 
 	exists, err := db.IsFileUploaded("existfile.txt")
 
@@ -67,7 +67,7 @@ func TestFileExists(t *testing.T) {
 
 func TestFilterUploadedFiles(t *testing.T) {
 	db := setupTestDB(t)
-	db.LogEntry("/source/path", "/dest/path", "putfile.txt", "PUT")
+	db.LogEntry("/source/path", "/dest/path", "putfile.txt")
 
 	files := []fileutils.LocalFileInfo{
 		{FileInfo: mockFileInfo{name: "putfile.txt"}},
