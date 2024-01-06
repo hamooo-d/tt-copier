@@ -1,8 +1,8 @@
 # Go SFTP File Transfer Project
 
-This project is a Go-based application responsible for transferring files using SFTP. It features a structured approach with dedicated modules for configuration, database interaction, file utilities, and SFTP operations.
+-- Project Status: [Under Review]
 
---- Project Status: [Under Development]
+This project is a Go-based application responsible for transferring files using SFTP. It features a structured approach with dedicated modules for configuration, database interaction, file utilities, and SFTP operations.
 
 ## Installation and Setup Instructions
 
