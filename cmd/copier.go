@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"sync"
+	"time"
 
 	"tt-copier/config"
 	"tt-copier/internal/db"
@@ -56,12 +57,23 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 		return true
 	}
 
-	logger.Info(fmt.Sprintf("Filtered, remaining %d files not uploaded.", len(filteredFiles)), "FILTER", "SUCCESS")
+	logger.Info(fmt.Sprintf("Filtered, remaining %d files not registered in database.", len(filteredFiles)), "FILTER", "SUCCESS")
 
 	logger.Info("Filtering bank and TT files.", "FILTER", "START")
 
 	bankFiles := fileutils.FilterStartedWith(filteredFiles, bankPrefixes)
 	TTFiles := fileutils.FilterStartedWith(filteredFiles, TTPrefixes)
+
+	afterDate, err := time.Parse("02012006", cfg.AfterDate)
+
+	if err != nil {
+		logger.Error("Error parsing after date:", err)
+
+		return false
+	}
+
+	bankFiles = fileutils.FilterAfterDate(bankFiles, afterDate)
+	TTFiles = fileutils.FilterAfterDate(TTFiles, afterDate)
 
 	logger.Info(fmt.Sprintf("Filtered, remaining %d bank files and %d TT files.", len(bankFiles), len(TTFiles)), "FILTER", "SUCCESS")
 

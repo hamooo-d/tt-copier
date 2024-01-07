@@ -10,6 +10,7 @@ type Config struct {
 	Dests         DestsConfig         `mapstructure:"dests"`
 	LogPath       string              `mapstructure:"log_path"`
 	Env           string              `mapstructure:"env"`
+	AfterDate     string              `mapstructure:"after_date"`
 	SFTP          SFTPConfig          `mapstructure:"sftp"`
 	FilesPrefixes FilesPrefixesConfig `mapstructure:"files_prefixes"`
 	SourceList    []string            `mapstructure:"source_list"`

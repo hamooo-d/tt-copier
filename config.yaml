@@ -9,6 +9,9 @@ sftp:
 database:
   db_path: "./db.sqlite"
 
+# AfterDate: This parameter is utilized for scanning files with timestamps later than the specified corresponding date.
+after_date: "01012024"
+
 # Bank idx and bank dir name
 banksNames:
   "000001": "TT"

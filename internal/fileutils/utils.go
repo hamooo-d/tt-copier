@@ -4,6 +4,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 	"tt-copier/internal/sftp"
 )
 
@@ -70,11 +71,35 @@ func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo
 }
 
 func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
-	ttDestination := "/home/sftp/files/TTP/TT/Prod/from_tadawul"
+	ttDestination := "/home/sftp/files/TTP/"
 
 	return AddGetDestination(source, ttDestination)
 }
 
+func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo {
+	var filteredFiles []LocalFileInfo
+	const layout = "02012006"
+
+	for _, file := range files {
+		name := file.Name()
+
+		parts := strings.Split(name, ".")
+		if len(parts) < 2 {
+			continue
+		}
+		dateStr := parts[len(parts)-2]
+		fileDate, err := time.Parse(layout, dateStr)
+		if err != nil {
+			continue
+		}
+
+		if fileDate.After(afterDate) {
+			filteredFiles = append(filteredFiles, file)
+		}
+	}
+
+	return filteredFiles
+}
 func LoadAllSourceFiles(client *sftp.Client, paths []string) ([]LocalFileInfo, error) {
 	var files []LocalFileInfo
 	for _, path := range paths {
