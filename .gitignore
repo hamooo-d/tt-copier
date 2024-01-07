@@ -42,4 +42,5 @@ go.mod
 *.out
 
 *.log
-./copier
+copier
+db.sqlite

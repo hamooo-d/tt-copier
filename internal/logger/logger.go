@@ -1,29 +1,34 @@
 package logger
 
 import (
-	"io"
 	"os"
+	"tt-copier/config"
 
 	"github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var log = logrus.New()
 
-func Init() {
+func Init(cfg *config.Config) {
 	log.SetFormatter(&logrus.TextFormatter{
 		DisableColors: true,
 		FullTimestamp: true,
 	})
-	log.Out = os.Stdout
 
-	file, err := os.OpenFile("./logs.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0666)
-
-	if err == nil {
-		log.Out = io.MultiWriter(file, os.Stdout)
+	if cfg.Env != "Prod" {
+		log.SetOutput(os.Stdout)
 	} else {
-		Warn("Failed to log to file, using default stderr", "INIT", "FAILED")
-	}
+		fileOutput := &lumberjack.Logger{
+			Filename:   cfg.LogPath,
+			MaxSize:    10, // megabytes
+			MaxBackups: 3,
+			MaxAge:     28, // days
+			Compress:   true,
+		}
 
+		log.SetOutput(fileOutput)
+	}
 }
 
 func Info(message string, action string, status string) {

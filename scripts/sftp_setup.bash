@@ -16,7 +16,7 @@ log "Starting SFTP user and directory setup."
 sudo groupadd sftpusers
 log "Group sftpusers created."
 
-USERS=("atib" "nab" "sb" "tt" "med")
+USERS=("atib" "nab" "sb" "tt" "med" "ncb")
 
 sudo mkdir -p /home/sftp/files
 sudo chown root:root /home/sftp/files
@@ -50,9 +50,9 @@ for user in "${USERS[@]}"; do
 	done
 done
 
-sudo mkdir -p /home/sftp/files/TTP
+sudo mkdir -p /home/sftp/files/TTP/TT/Prod/from_tadawul
 sudo chown root:root /home/sftp/files/TTP
-sudo chmod 755 /home/sftp/files/TT
+sudo chmod -R 755 /home/sftp/files/TT
 log "TTP directory created and permissions set."
 
 log "SFTP user and Directory setup completed."

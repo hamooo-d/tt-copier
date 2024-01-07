@@ -70,7 +70,7 @@ func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo
 }
 
 func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
-	ttDestination := "/home/sftp/files/TTP/"
+	ttDestination := "/home/sftp/files/TTP/TT/Prod/from_tadawul"
 
 	return AddGetDestination(source, ttDestination)
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"sync"
 
 	"tt-copier/config"
 	"tt-copier/internal/db"
@@ -49,6 +50,12 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 		return false
 	}
 
+	if len(filteredFiles) == 0 {
+		logger.Info("No files to upload.", "UPLOAD", "SKIPPED")
+
+		return true
+	}
+
 	logger.Info(fmt.Sprintf("Filtered, remaining %d files not uploaded.", len(filteredFiles)), "FILTER", "SUCCESS")
 
 	logger.Info("Filtering bank and TT files.", "FILTER", "START")
@@ -57,6 +64,12 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 	TTFiles := fileutils.FilterStartedWith(filteredFiles, TTPrefixes)
 
 	logger.Info(fmt.Sprintf("Filtered, remaining %d bank files and %d TT files.", len(bankFiles), len(TTFiles)), "FILTER", "SUCCESS")
+
+	if len(bankFiles) == 0 && len(TTFiles) == 0 {
+		logger.Info("No files to upload.", "UPLOAD", "SUCCESS")
+
+		return true
+	}
 
 	bankFilesWithDestination, err := fileutils.AddBankDestination(bankFiles, cfg.Dests.BankDest, cfg.BanksNames, cfg.Env)
 
@@ -75,57 +88,110 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 
 	bankUploadCount := 0
 
+	var wg sync.WaitGroup
+	errChan := make(chan error, len(bankFilesWithDestination))
+	semaphore := make(chan struct{}, 10)
+
 	for _, file := range bankFilesWithDestination {
-		sourcePath := file.SourceFullPath
-		destinationPath := file.DestinationFullPath
+		wg.Add(1)
 
-		logger.Info(fmt.Sprintf("Uploading bank file %s", file.Name()), "UPLOAD", "START")
+		go func(file fileutils.FileInfoExtended) {
+			defer wg.Done()
 
-		err := client.PutProcedure(sourcePath, destinationPath)
+			semaphore <- struct{}{}
 
-		if err != nil {
-			logger.Warn(fmt.Sprintf("Error uploading bank file %s: %v", file.Name(), err), "UPLOAD", "FAILED")
-		} else {
-			err = dbInstance.LogEntry(sourcePath, destinationPath, file.Name())
+			sourcePath := file.SourceFullPath
+			destinationPath := file.DestinationFullPath
+
+			err := client.PutProcedure(sourcePath, destinationPath)
 
 			if err != nil {
-				logger.Error("Error logging entry: %v", err)
+				errChan <- err
 			} else {
-				logger.Info("File saved in db", "UPLOAD", "SUCCESS")
-
+				bankUploadCount++
+				err := dbInstance.LogEntry(sourcePath, destinationPath, file.Name())
+				if err != nil {
+					logger.Warn(fmt.Sprintf("Error logging file %s: %v", file.Name(), err), "UPLOAD", "FAILED")
+				}
 			}
-			bankUploadCount++
-			logger.Info(fmt.Sprintf("Successfully uploaded bank file %s", file.Name()), "UPLOAD", "SUCCESS")
-		}
+
+			<-semaphore
+		}(file)
 	}
 
-	// log total bank files and uploaded bank files
-	logger.Info(fmt.Sprintf("Total bank files: %d", len(bankFiles)), "UPLOAD", "SUCCESS")
-	logger.Info(fmt.Sprintf("Uploaded %d bank files, Total", bankUploadCount), "UPLOAD", "SUCCESS")
+	wg.Wait()
+	close(errChan)
+
+	for err := range errChan {
+		if err != nil {
+			logger.Error("Error uploading bank file", err)
+		}
+
+	}
+
+	fmt.Println("Total bank files: ", len(bankFilesWithDestination))
+	logger.Info(fmt.Sprintf("Total bank files: %d", len(bankFilesWithDestination)), "UPLOAD", "INFORMATIONAL")
+	logger.Info(fmt.Sprintf("Uploaded %d bank files, Total", bankUploadCount), "UPLOAD", "INFORMATIONAL")
+
+	logger.Info("Uploading TT files.", "UPLOAD", "START")
+
+	ttUploadCount := 0
+	var ttWg sync.WaitGroup
+	ttErrChan := make(chan error, len(TTFilesWithDestination))
+	ttSemaphore := make(chan struct{}, 10)
 
 	for _, file := range TTFilesWithDestination {
-		sourcePath := file.SourceFullPath
-		destinationPath := file.DestinationFullPath
+		ttWg.Add(1)
 
-		err := client.PutProcedure(sourcePath, destinationPath)
+		go func(file fileutils.FileInfoExtended) {
+			defer ttWg.Done()
+
+			ttSemaphore <- struct{}{}
+
+			sourcePath := file.SourceFullPath
+			destinationPath := file.DestinationFullPath
+
+			err := client.PutProcedure(sourcePath, destinationPath)
+
+			if err != nil {
+				ttErrChan <- err
+			} else {
+				ttUploadCount++
+				err := dbInstance.LogEntry(sourcePath, destinationPath, file.Name())
+				if err != nil {
+					logger.Warn(fmt.Sprintf("Error logging file %s: %v", file.Name(), err), "UPLOAD", "FAILED")
+				}
+			}
+
+			<-ttSemaphore
+		}(file)
+	}
+
+	ttWg.Wait()
+
+	close(ttErrChan)
+
+	for err := range ttErrChan {
 		if err != nil {
-			logger.Warn(fmt.Sprintf("Error uploading TT file %s: %v", file.Name(), err), "UPLOAD", "FAILED")
-		} else {
-			logger.Info(fmt.Sprintf("Successfully uploaded TT file %s", file.Name()), "UPLOAD", "SUCCESS")
+			logger.Error("Error uploading TT file: %v", err)
 		}
 	}
+
+	logger.Info(fmt.Sprintf("Total TT files: %d", len(TTFilesWithDestination)), "UPLOAD", "SUCCESS")
+	logger.Info(fmt.Sprintf("Uploaded %d TT files, Total", ttUploadCount), "UPLOAD", "SUCCESS")
 
 	return true
 }
 
 func main() {
-	logger.Init()
 	cfg, err := config.LoadConfig(".")
 
 	if err != nil {
-		logger.Error("Error loading config: %v", err)
+		fmt.Println("Error loading config file, exiting.")
 		os.Exit(1)
 	}
+
+	logger.Init(cfg)
 
 	client, err := sftp.NewClient(cfg.SFTP.Host, cfg.SFTP.Port, cfg.SFTP.User, cfg.SFTP.Password)
 
@@ -142,7 +208,7 @@ func main() {
 		logger.Info("Upload failed, exiting.", "UPLOAD", "FAILED")
 		os.Exit(1)
 	} else {
-		logger.Info("Upload finished successfully.", "UPLOAD", "SUCCESS")
+		logger.Info("Upload finished.", "UPLOAD", "SUCCESS")
 	}
 
 }

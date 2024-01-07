@@ -11,7 +11,7 @@ trap 'log "An error occurred. Exiting..."; exit 1' ERR
 
 log "Starting SFTP user and directory undo process."
 
-USERS=("atib" "nab" "sb" "tt" "med")
+USERS=("atib" "nab" "sb" "tt" "med" "ncb")
 
 for user in "${USERS[@]}"; do
 	sudo userdel "$user"

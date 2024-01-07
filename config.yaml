@@ -1,8 +1,8 @@
 # SFTP Connection creds
 sftp:
   user: "root"
-  password: "password"
-  host: 127.0.0.1
+  password: "sofian"
+  host: 192.168.100.6
   port: 22
 
 # SQlite db path
@@ -25,7 +25,7 @@ dests:
 # Enviroment Prod | UAT, Note: also used in sftp dest path
 env: "Prod"
 
-logs_path: "/var/log/tt_copier.log"
+log_path: "./tt-copier.log"
 
 # Files source list
 source_list:

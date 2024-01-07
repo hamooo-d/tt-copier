@@ -98,7 +98,7 @@ func (c *Client) PutProcedure(localPath, remotePath string) error {
 		return fmt.Errorf("failed to copy file over SFTP: %v", err)
 	}
 
-	err = c.sftpClient.Chmod(remotePath, 0750)
+	err = c.sftpClient.Chmod(remotePath, 0755)
 
 	if err != nil {
 		return fmt.Errorf("failed to change remote file permission: %v", err)

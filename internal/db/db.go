@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"time"
 	"tt-copier/internal/fileutils"
-	"tt-copier/internal/logger"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -65,8 +64,6 @@ func (l *DB) IsFileUploaded(fileName string) (bool, error) {
 	if err != nil {
 		return false, fmt.Errorf("error querying file existence: %v", err)
 	}
-
-	logger.Info(fmt.Sprintf("File %s count is %d", fileName, count), "DB", "INFO")
 
 	return count > 0, nil
 }
