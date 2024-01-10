@@ -141,7 +141,6 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 
 	}
 
-	fmt.Println("Total bank files: ", len(bankFilesWithDestination))
 	logger.Info(fmt.Sprintf("Total bank files: %d", len(bankFilesWithDestination)), "UPLOAD", "INFORMATIONAL")
 	logger.Info(fmt.Sprintf("Uploaded %d bank files, Total", bankUploadCount), "UPLOAD", "INFORMATIONAL")
 
