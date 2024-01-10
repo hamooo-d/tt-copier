@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"tt-copier/internal/sftp"
 )
 
 type FileInfoExtended struct {
@@ -100,25 +99,32 @@ func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo
 
 	return filteredFiles
 }
-func LoadAllSourceFiles(client *sftp.Client, paths []string) ([]LocalFileInfo, error) {
+
+func LoadAllSourceFiles(paths []string) ([]LocalFileInfo, error) {
 	var files []LocalFileInfo
 	for _, path := range paths {
-		dirFiles, err := client.ListFiles(path)
-
+		dirFiles, err := os.ReadDir(path) // Use ioutil.ReadDir for older Go versions
 		if err != nil {
 			return nil, err
 		}
 
-		for _, file := range dirFiles {
-			if !file.IsDir() {
-				fullPath := filepath.Join(path, file.Name())
-
-				files = append(files, LocalFileInfo{
-					FileInfo:       file,
-					Path:           path,
-					SourceFullPath: fullPath,
-				})
+		for _, dirEntry := range dirFiles {
+			if dirEntry.IsDir() {
+				continue // Skip directories
 			}
+
+			fileInfo, err := dirEntry.Info()
+			if err != nil {
+				return nil, err
+			}
+
+			fullPath := filepath.Join(path, fileInfo.Name())
+
+			files = append(files, LocalFileInfo{
+				FileInfo:       fileInfo,
+				Path:           path,
+				SourceFullPath: fullPath,
+			})
 		}
 	}
 	return files, nil
