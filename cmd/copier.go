@@ -34,7 +34,7 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 	allFiles, err := fileutils.LoadAllSourceFiles(sourceList)
 
 	if err != nil {
-		logger.Error("Error loading files from source list: %v", err)
+		logger.Error("Error loading files from source list: ", err)
 
 		return false
 	}
@@ -57,12 +57,12 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 		return true
 	}
 
-	logger.Info(fmt.Sprintf("Filtered, remaining %d files not registered in database.", len(filteredFiles)), "FILTER", "SUCCESS")
-
 	logger.Info("Filtering bank and TT files.", "FILTER", "START")
 
 	bankFiles := fileutils.FilterStartedWith(filteredFiles, bankPrefixes)
 	TTFiles := fileutils.FilterStartedWith(filteredFiles, TTPrefixes)
+
+	logger.Info(fmt.Sprintf("Prefixes matched on %d bank files and %d TT files.", len(bankFiles), len(TTFiles)), "FILTER", "SUCCESS")
 
 	afterDate, err := time.Parse("02012006", cfg.AfterDate)
 
@@ -75,7 +75,7 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 	bankFiles = fileutils.FilterAfterDate(bankFiles, afterDate)
 	TTFiles = fileutils.FilterAfterDate(TTFiles, afterDate)
 
-	logger.Info(fmt.Sprintf("Filtered, remaining %d bank files and %d TT files.", len(bankFiles), len(TTFiles)), "FILTER", "SUCCESS")
+	logger.Info(fmt.Sprintf("Verified date on %d bank files and %d TT files.", len(bankFiles), len(TTFiles)), "FILTER", "SUCCESS")
 
 	if len(bankFiles) == 0 && len(TTFiles) == 0 {
 		logger.Info("No files to upload.", "UPLOAD", "SUCCESS")
@@ -85,18 +85,22 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 
 	bankFilesWithDestination, err := fileutils.AddBankDestination(bankFiles, cfg.Dests.BankDest, cfg.BanksNames, cfg.Env)
 
+	logger.Info(fmt.Sprintf("Added destination to %d bank files.", len(bankFilesWithDestination)), "UPLOAD", "SUCCESS")
+
 	if err != nil {
 		logger.Error("Error adding bank destination: %v", err)
 
 		return false
 	}
 
-	TTFilesWithDestination, err := fileutils.AddTTDestination(TTFiles)
+	TTFilesWithDestination, err := fileutils.AddTTDestination(TTFiles, cfg.BanksNames, cfg.Env)
 
 	if err != nil {
-		logger.Error("Error adding bank destination: %v", err)
+		logger.Error("Error adding TT destination: %v", err)
 		return false
 	}
+
+	logger.Info(fmt.Sprintf("Added destination to %d TT files.", len(TTFilesWithDestination)), "UPLOAD", "SUCCESS")
 
 	bankUploadCount := 0
 
@@ -134,11 +138,8 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 	wg.Wait()
 	close(errChan)
 
-	for err := range errChan {
-		if err != nil {
-			logger.Error("Error uploading bank file", err)
-		}
-
+	if len(errChan) > 0 {
+		logger.Error("Error uploading bank file.", err)
 	}
 
 	logger.Info(fmt.Sprintf("Total bank files: %d", len(bankFilesWithDestination)), "UPLOAD", "INFORMATIONAL")
@@ -182,14 +183,15 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 
 	close(ttErrChan)
 
-	for err := range ttErrChan {
-		if err != nil {
-			logger.Error("Error uploading TT file: %v", err)
-		}
+	if len(ttErrChan) > 0 {
+		logger.Error("Error uploading TT files.", err)
 	}
 
-	logger.Info(fmt.Sprintf("Total TT files: %d", len(TTFilesWithDestination)), "UPLOAD", "SUCCESS")
-	logger.Info(fmt.Sprintf("Uploaded %d TT files, Total", ttUploadCount), "UPLOAD", "SUCCESS")
+	logger.Info(fmt.Sprintf("Total TT files: %d", len(TTFilesWithDestination)), "UPLOAD", "INFO")
+	logger.Info(fmt.Sprintf("Uploaded %d TT files, Total", ttUploadCount), "UPLOAD", "INFO")
+
+	logger.Info(fmt.Sprintf("Skipped %d files", len(filteredFiles)-(bankUploadCount+ttUploadCount)), "UPLOAD", "INFO")
+	logger.Info(fmt.Sprintf("Uploaded %d files, Total", bankUploadCount+ttUploadCount), "UPLOAD", "INFO")
 
 	return true
 }
@@ -198,7 +200,7 @@ func main() {
 	cfg, err := config.LoadConfig(".")
 
 	if err != nil {
-		fmt.Println("Error loading config file, exiting.")
+		fmt.Println("Error loading config file, exiting. err")
 		os.Exit(1)
 	}
 
@@ -221,5 +223,4 @@ func main() {
 	} else {
 		logger.Info("Upload finished.", "UPLOAD", "SUCCESS")
 	}
-
 }

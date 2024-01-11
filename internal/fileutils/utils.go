@@ -20,6 +20,20 @@ type LocalFileInfo struct {
 	SourceFullPath string
 }
 
+func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo {
+	var filteredFiles []LocalFileInfo
+
+	for _, file := range files {
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(file.Name(), prefix) {
+				filteredFiles = append(filteredFiles, file)
+				break
+			}
+		}
+	}
+	return filteredFiles
+}
+
 func AddBankDestination(source []LocalFileInfo, basePath string, banksNames map[string]string, env string) ([]FileInfoExtended, error) {
 	var newFileList []FileInfoExtended
 
@@ -56,27 +70,15 @@ func AddGetDestination(fileList []LocalFileInfo, destination string) ([]FileInfo
 	return updatedFileList, nil
 }
 
-func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo {
-	var filteredFiles []LocalFileInfo
-	for _, file := range files {
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(file.Name(), prefix) {
-				filteredFiles = append(filteredFiles, file)
-				break
-			}
-		}
-	}
-	return filteredFiles
-}
-
-func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
+func AddTTDestination(source []LocalFileInfo, banksNames map[string]string, env string) ([]FileInfoExtended, error) {
 	ttDestination := "/home/sftp/files/TTP/"
 
-	return AddGetDestination(source, ttDestination)
+	return AddBankDestination(source, ttDestination, banksNames, env)
 }
 
 func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo {
 	var filteredFiles []LocalFileInfo
+
 	const layout = "02012006"
 
 	for _, file := range files {
@@ -88,6 +90,7 @@ func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo
 		}
 		dateStr := parts[len(parts)-2]
 		fileDate, err := time.Parse(layout, dateStr)
+
 		if err != nil {
 			continue
 		}
@@ -110,7 +113,7 @@ func LoadAllSourceFiles(paths []string) ([]LocalFileInfo, error) {
 
 		for _, dirEntry := range dirFiles {
 			if dirEntry.IsDir() {
-				continue // Skip directories
+				continue
 			}
 
 			fileInfo, err := dirEntry.Info()

@@ -44,3 +44,4 @@ go.mod
 *.log
 copier
 db.sqlite
+config.yaml

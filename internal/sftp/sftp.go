@@ -79,7 +79,7 @@ func (c *Client) CopyRename(files []os.FileInfo, source, destination string, ren
 }
 
 func (c *Client) PutProcedure(localPath, remotePath string) error {
-	localFile, err := c.sftpClient.Open(localPath)
+	localFile, err := os.Open(localPath)
 
 	if err != nil {
 		return err
