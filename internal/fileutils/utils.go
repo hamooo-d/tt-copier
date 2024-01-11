@@ -77,6 +77,7 @@ func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
 
 func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo {
 	var filteredFiles []LocalFileInfo
+
 	const layout = "02012006"
 
 	for _, file := range files {
@@ -88,6 +89,7 @@ func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo
 		}
 		dateStr := parts[len(parts)-2]
 		fileDate, err := time.Parse(layout, dateStr)
+
 		if err != nil {
 			continue
 		}
@@ -110,7 +112,7 @@ func LoadAllSourceFiles(paths []string) ([]LocalFileInfo, error) {
 
 		for _, dirEntry := range dirFiles {
 			if dirEntry.IsDir() {
-				continue // Skip directories
+				continue
 			}
 
 			fileInfo, err := dirEntry.Info()
