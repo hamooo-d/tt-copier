@@ -80,15 +80,26 @@ func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo
 	var filteredFiles []LocalFileInfo
 
 	const layout = "02012006"
+	const dateLength = 8
 
 	for _, file := range files {
 		name := file.Name()
 
-		parts := strings.Split(name, ".")
-		if len(parts) < 2 {
+		var dateStr string
+
+		for i := len(name) - dateLength; i >= 0; i-- {
+			substr := name[i : i+dateLength]
+
+			if _, err := time.Parse(layout, substr); err == nil {
+				dateStr = substr
+				break
+			}
+		}
+
+		if dateStr == "" {
 			continue
 		}
-		dateStr := parts[len(parts)-2]
+
 		fileDate, err := time.Parse(layout, dateStr)
 
 		if err != nil {
