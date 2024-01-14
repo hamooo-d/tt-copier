@@ -20,20 +20,6 @@ type LocalFileInfo struct {
 	SourceFullPath string
 }
 
-func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo {
-	var filteredFiles []LocalFileInfo
-
-	for _, file := range files {
-		for _, prefix := range prefixes {
-			if strings.HasPrefix(file.Name(), prefix) {
-				filteredFiles = append(filteredFiles, file)
-				break
-			}
-		}
-	}
-	return filteredFiles
-}
-
 func AddBankDestination(source []LocalFileInfo, basePath string, banksNames map[string]string, env string) ([]FileInfoExtended, error) {
 	var newFileList []FileInfoExtended
 
@@ -55,6 +41,20 @@ func AddBankDestination(source []LocalFileInfo, basePath string, banksNames map[
 	return newFileList, nil
 }
 
+func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo {
+	var filteredFiles []LocalFileInfo
+
+	for _, file := range files {
+		for _, prefix := range prefixes {
+			if strings.HasPrefix(file.Name(), prefix) {
+				filteredFiles = append(filteredFiles, file)
+				break
+			}
+		}
+	}
+	return filteredFiles
+}
+
 func AddGetDestination(fileList []LocalFileInfo, destination string) ([]FileInfoExtended, error) {
 	var updatedFileList []FileInfoExtended
 
@@ -69,37 +69,25 @@ func AddGetDestination(fileList []LocalFileInfo, destination string) ([]FileInfo
 
 	return updatedFileList, nil
 }
+func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
+	ttDestination := "/home/sftp/files/TT/Prod/from_tadawul"
 
-func AddTTDestination(source []LocalFileInfo, banksNames map[string]string, env string) ([]FileInfoExtended, error) {
-	ttDestination := "/home/sftp/files/TTP/"
-
-	return AddBankDestination(source, ttDestination, banksNames, env)
+	return AddGetDestination(source, ttDestination)
 }
 
 func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo {
 	var filteredFiles []LocalFileInfo
 
 	const layout = "02012006"
-	const dateLength = 8
 
 	for _, file := range files {
 		name := file.Name()
 
-		var dateStr string
-
-		for i := len(name) - dateLength; i >= 0; i-- {
-			substr := name[i : i+dateLength]
-
-			if _, err := time.Parse(layout, substr); err == nil {
-				dateStr = substr
-				break
-			}
-		}
-
-		if dateStr == "" {
+		parts := strings.Split(name, ".")
+		if len(parts) < 2 {
 			continue
 		}
-
+		dateStr := parts[len(parts)-2]
 		fileDate, err := time.Parse(layout, dateStr)
 
 		if err != nil {

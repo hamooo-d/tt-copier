@@ -93,7 +93,7 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 		return false
 	}
 
-	TTFilesWithDestination, err := fileutils.AddTTDestination(TTFiles, cfg.BanksNames, cfg.Env)
+	TTFilesWithDestination, err := fileutils.AddTTDestination(TTFiles)
 
 	if err != nil {
 		logger.Error("Error adding TT destination: %v", err)
@@ -123,8 +123,6 @@ func uploadToSFTP(client *sftp.Client, cfg *config.Config) bool {
 
 			if err != nil {
 				errChan <- err
-				// log file name destinationPath and sourcePath
-				logger.Info(fmt.Sprintf("Error uploading file %s: %v, destination: %s, source path: %s", file.Name(), err, sourcePath, destinationPath), "UPLOAD", "FAILED")
 			} else {
 				bankUploadCount++
 				err := dbInstance.LogEntry(sourcePath, destinationPath, file.Name())
