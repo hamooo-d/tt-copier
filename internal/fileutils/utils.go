@@ -120,7 +120,7 @@ func extractDateFromName(name string, regexes []*regexp.Regexp) string {
 func parseDate(dateStr string) (time.Time, error) {
 	var layouts = []string{
 		"02012006",
-		"020106",
+		"060102",
 	}
 
 	for _, layout := range layouts {
