@@ -1,8 +1,10 @@
 package fileutils
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -52,6 +54,7 @@ func FilterStartedWith(files []LocalFileInfo, prefixes []string) []LocalFileInfo
 			}
 		}
 	}
+
 	return filteredFiles
 }
 
@@ -78,29 +81,20 @@ func AddTTDestination(source []LocalFileInfo) ([]FileInfoExtended, error) {
 func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo {
 	var filteredFiles []LocalFileInfo
 
-	const layout = "02012006"
-	const dateLength = 8
+	var dateRegexes = []*regexp.Regexp{
+		regexp.MustCompile(`\d{8}`),
+		regexp.MustCompile(`\d{6}`),
+	}
 
 	for _, file := range files {
 		name := file.Name()
-
-		var dateStr string
-
-		for i := len(name) - dateLength; i >= 0; i-- {
-			substr := name[i : i+dateLength]
-
-			if _, err := time.Parse(layout, substr); err == nil {
-				dateStr = substr
-				break
-			}
-		}
+		dateStr := extractDateFromName(name, dateRegexes)
 
 		if dateStr == "" {
 			continue
 		}
 
-		fileDate, err := time.Parse(layout, dateStr)
-
+		fileDate, err := parseDate(dateStr)
 		if err != nil {
 			continue
 		}
@@ -113,10 +107,36 @@ func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo
 	return filteredFiles
 }
 
+func extractDateFromName(name string, regexes []*regexp.Regexp) string {
+	for _, regex := range regexes {
+		matches := regex.FindAllString(name, -1)
+		if matches != nil {
+			return matches[len(matches)-1]
+		}
+	}
+	return ""
+}
+
+func parseDate(dateStr string) (time.Time, error) {
+	var layouts = []string{
+		"02012006",
+		"020106",
+	}
+
+	for _, layout := range layouts {
+		t, err := time.Parse(layout, dateStr)
+		if err == nil {
+			return t, nil
+		}
+	}
+
+	return time.Time{}, errors.New("unable to parse date")
+}
+
 func LoadAllSourceFiles(paths []string) ([]LocalFileInfo, error) {
 	var files []LocalFileInfo
 	for _, path := range paths {
-		dirFiles, err := os.ReadDir(path) // Use ioutil.ReadDir for older Go versions
+		dirFiles, err := os.ReadDir(path)
 		if err != nil {
 			return nil, err
 		}

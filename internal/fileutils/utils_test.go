@@ -26,6 +26,7 @@ func TestAddBankDestination(t *testing.T) {
 	files := []LocalFileInfo{
 		{FileInfo: mockFileInfo{name: "000006_EV_MERC_20240102.txt"}, Path: "", SourceFullPath: ""},
 		{FileInfo: mockFileInfo{name: "000004_sample.txt"}, Path: "", SourceFullPath: ""},
+		{FileInfo: mockFileInfo{name: "CL.000005.240123"}, Path: "", SourceFullPath: ""},
 		{FileInfo: mockFileInfo{name: "non_bank_file.txt"}, Path: "", SourceFullPath: ""},
 	}
 	basePath := "/home/sftp/files/TTP"
@@ -45,8 +46,8 @@ func TestAddBankDestination(t *testing.T) {
 		t.Fatalf("AddBankDestination returned an error: %v", err)
 	}
 
-	if len(result) != 2 {
-		t.Errorf("Expected 2 files to match bank IDs, got %d", len(result))
+	if len(result) != 3 {
+		t.Errorf("Expected 3 files to match bank IDs, got %d", len(result))
 
 		for _, f := range result {
 			t.Logf("File: %s, Destination: %s", f.Name(), f.DestinationFullPath)
@@ -104,5 +105,38 @@ func TestFilterStartedWith(t *testing.T) {
 	}
 	for _, file := range filteredFiles {
 		t.Logf("File: %s", file.Name())
+	}
+}
+
+func TestFilterAfterDate(t *testing.T) {
+	afterDate, _ := time.Parse("02012006", "01012023")
+
+	files := []LocalFileInfo{
+		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_30122022.000002"}},
+		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_01012023.000003"}},
+		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_02012023.000004"}},
+		{FileInfo: mockFileInfo{name: "CL.000005.240123"}},
+		{FileInfo: mockFileInfo{name: "random_file.txt"}},
+	}
+
+	filteredFiles := FilterAfterDate(files, afterDate)
+
+	expectedFileNames := map[string]bool{
+		"POS_RevAuthFile_02012023.000004": true,
+		"CL.000005.240123":                true,
+	}
+
+	if len(filteredFiles) != len(expectedFileNames) {
+		t.Errorf("Expected %d files after filtering, got %d", len(expectedFileNames), len(filteredFiles))
+	}
+
+	for _, file := range filteredFiles {
+		if _, ok := expectedFileNames[file.Name()]; !ok {
+			t.Errorf("Unexpected file after filtering: %s", file.Name())
+		}
+	}
+
+	for _, file := range filteredFiles {
+		t.Logf("Filtered File: %s", file.Name())
 	}
 }
