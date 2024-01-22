@@ -108,6 +108,18 @@ func FilterAfterDate(files []LocalFileInfo, afterDate time.Time) []LocalFileInfo
 }
 
 func extractDateFromName(name string, regexes []*regexp.Regexp) string {
+	if strings.HasPrefix(name, "PersoFile_") {
+		parts := strings.Split(name, "_")
+		if len(parts) >= 5 {
+			datePart := parts[4]
+			dotIndex := strings.Index(datePart, ".")
+			if dotIndex != -1 {
+				// Extract the date portion before the dot
+				return datePart[:dotIndex]
+			}
+		}
+	}
+
 	for _, regex := range regexes {
 		matches := regex.FindAllString(name, -1)
 		if matches != nil {

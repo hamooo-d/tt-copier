@@ -112,7 +112,7 @@ func TestFilterAfterDate(t *testing.T) {
 	afterDate, _ := time.Parse("02012006", "12012024")
 
 	files := []LocalFileInfo{
-		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_16012024.000002"}},
+		{FileInfo: mockFileInfo{name: "PersoFile_000002_D-001__240125.017015"}},
 		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_11012024.000003"}},
 		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_02012024.000004"}},
 		{FileInfo: mockFileInfo{name: "CL.000005.240113"}},
@@ -122,8 +122,8 @@ func TestFilterAfterDate(t *testing.T) {
 	filteredFiles := FilterAfterDate(files, afterDate)
 
 	expectedFileNames := map[string]bool{
-		"POS_RevAuthFile_16012024.000002": true,
-		"CL.000005.240110":                true,
+		"PersoFile_000002_D-001__240125.017015": true,
+		"CL.000005.240113":                      true,
 	}
 
 	if len(filteredFiles) != len(expectedFileNames) {
