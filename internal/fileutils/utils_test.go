@@ -113,6 +113,8 @@ func TestFilterAfterDate(t *testing.T) {
 
 	files := []LocalFileInfo{
 		{FileInfo: mockFileInfo{name: "PersoFile_000002_D-001__240125.017015"}},
+		{FileInfo: mockFileInfo{name: "PersoFile_000002_DD-XY_001__240111.017015"}},
+		{FileInfo: mockFileInfo{name: "PersoFile_231231240113.017015"}},
 		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_11012024.000003"}},
 		{FileInfo: mockFileInfo{name: "POS_RevAuthFile_02012024.000004"}},
 		{FileInfo: mockFileInfo{name: "CL.000005.240113"}},
@@ -124,6 +126,7 @@ func TestFilterAfterDate(t *testing.T) {
 	expectedFileNames := map[string]bool{
 		"PersoFile_000002_D-001__240125.017015": true,
 		"CL.000005.240113":                      true,
+		"PersoFile_231231240113.017015":         true,
 	}
 
 	if len(filteredFiles) != len(expectedFileNames) {
